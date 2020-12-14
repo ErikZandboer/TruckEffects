@@ -15,7 +15,7 @@
 // Define the physical pinout
 #define HAZARDLIGHTS   24
 #define REVLIGHTS      25
-#define BREAKLIGHTS    26   // should connect to TX of the Serial MP3 Player module
+#define BREAKLIGHTS    26 
 #define CONSTLIGHTS    27
 #define MP3_RX         23
 #define MP3_TX         22   // connect to RX of the MP3 player module
@@ -30,7 +30,7 @@ unsigned int    TickCounter=0;
 
 // Timings and things to change
 #define TIM_SAMPLESTART       5*RUN_FREQ        // 5 seconds
-#define TIM_SAMPLELENGTH      61*RUN_FREQ       // 10 seconds
+#define TIM_SAMPLELENGTH      61*RUN_FREQ       // 61 seconds
 #define TIM_STARTCONST        3*RUN_FREQ
 #define TIM_STOPCONST         57*RUN_FREQ
 #define TIM_BREAK1_ON         14*RUN_FREQ
@@ -53,7 +53,7 @@ void setup()
         digitalWrite(HAZARDLIGHTS, LOW);     // Hazard lights led group starts OFF
         digitalWrite(REVLIGHTS,    LOW);     // Reverse lights led group starts OFF
         digitalWrite(BREAKLIGHTS,  LOW);     // Brake light led group starts OFF
-        digitalWrite(CONSTLIGHTS,  LOW);     // Contant-on led group starts ON
+        digitalWrite(CONSTLIGHTS,  LOW);     // Contant-on led group starts OFF
         
         // All led groups as OUTPUT
         pinMode (HAZARDLIGHTS,   OUTPUT);
