@@ -110,11 +110,11 @@ void loop()
         }
 
         // Time the constant lights
-        if ( TickCounter == TIM_CONST_START )
+        if ( TickCounter == TIM_STARTCONST )
         {
              digitalWrite(CONSTLIGHTS, HIGH);   
         }
-        if ( TickCounter == TIM_CONST_STOP )
+        if ( TickCounter == TIM_STOPCONST )
         {
              digitalWrite(CONSTLIGHTS, LOW);   
         }
