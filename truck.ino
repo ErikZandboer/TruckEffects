@@ -47,6 +47,8 @@ unsigned int    TickCounter=0;
 #define TIM_REV_STOP          66*RUN_FREQ
 #define TIM_REPEAT            90*RUN_FREQ       // Rewind at 90 seconds (max. value is 655535 = 327 seconds = a little over 5 minutes)
 
+#define FLASHSPEED            50                // 50 = 0,5 sec     100 = 1 sec      25 = 0,25 sec etc 
+
 // This runs only once when powering on
 void setup()
 {
@@ -122,7 +124,7 @@ void loop()
         }
         
         // Time the hazard lights
-        if (TickCounter % 50 == 0)             // Every half second we invert the hazard lights
+        if (TickCounter % FLASHSPEED == 0)             // Every half second we invert the hazard lights
         {
               digitalWrite(HAZARDLIGHTS, !digitalRead(HAZARDLIGHTS));
         }
