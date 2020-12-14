@@ -60,6 +60,8 @@ void setup()
         pinMode (REVLIGHTS,   OUTPUT);
         pinMode (BREAKLIGHTS,   OUTPUT);
         pinMode (CONSTLIGHTS,   OUTPUT);
+        
+        TickCounter=0;
 }
 
 // This loops forever.
