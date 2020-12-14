@@ -1,11 +1,10 @@
 /*--------------------------------------------------------------------------------------------*/
-/* Tank led & motor simulation.                                                               */
+/* Truck led & motor simulation.                                                              */
 /*                                                                                            */
-/* Controls two leds and a motor to simulate a model tank                                     */
+/* Controls various leds and an mp3 player to simulate a model truck                          */
 /*                                                                                            */
 /* Versioning:                                                                                */
-/* 1.00            Creation. First go at timing the leds and motor.                           */
-/* 1.01            Made sure the leds cannot get stuck to "on" and simplified timing defines  */
+/* 1.00            Creation. First go at timing the leds and mp3 player.                      */
 /*--------------------------------------------------------------------------------------------*/
 
 // Includes
@@ -14,10 +13,12 @@
 #include "RedMP3.h"
 
 // Define the physical pinout
-#define RATTLELED   13
-#define RADARMOTOR  5
-#define MP3_RX    8   //should connect to TX of the Serial MP3 Player module
-#define MP3_TX    7   //connect to RX of the MP3 player module
+#define HAZARDLIGHTS   24
+#define REVLIGHTS      25
+#define BREAKLIGHTS    26   // should connect to TX of the Serial MP3 Player module
+#define CONSTLIGHTS    27
+#define MP3_RX         23
+#define MP3_TX         22   // connect to RX of the MP3 player module
 
 // Setup serial comms to the MP3 hardware
 MP3 mp3(MP3_RX, MP3_TX);
@@ -28,68 +29,101 @@ unsigned int    TickCounter=0;
 #define RUN_FREQ 100
 
 // Timings and things to change
-#define TIM_SAMPLESTART       500               // 5 seconds
-#define TIM_SAMPLELENGTH      1000              // 10 seconds
-#define TIM_BURST1            510               // 5 seconds plus a tiny bit
-#define TIM_BURSTLEN1         26                // Length of burst1. Make this an EVEN number! (if this is 10 then there are 5 bursts)
-#define TIM_BURST2            600    
-#define TIM_BURSTLEN2         180               // Length of burst2. Make this an EVEN number! (if this is 10 then there are 5 bursts)
-#define TIM_BURST3            870         
-#define TIM_BURSTLEN3         320               // Length of burst3. Make this an EVEN number! (if this is 10 then there are 5 bursts)
-#define TIM_REPEAT            6000              // Rewind at 60 seconds (max. value is 655535 = 327 seconds = a little over 5 minutes)
-
-#define SPD_RADAR             25                // min=0, max=255. Find the value that works for your setup
+#define TIM_SAMPLESTART       5*RUN_FREQ        // 5 seconds
+#define TIM_SAMPLELENGTH      61*RUN_FREQ       // 10 seconds
+#define TIM_STARTCONST        3*RUN_FREQ
+#define TIM_STOPCONST         57*RUN_FREQ
+#define TIM_BREAK1_ON         14*RUN_FREQ
+#define TIM_BREAK1_OFF        15*RUN_FREQ
+#define TIM_BREAK2_ON         30*RUN_FREQ
+#define TIM_BREAK2_OFF        31*RUN_FREQ
+#define TIM_BREAK3_ON         39*RUN_FREQ
+#define TIM_BREAK3_OFF        40*RUN_FREQ
+#define TIM_BREAK4_ON         43*RUN_FREQ
+#define TIM_BREAK4_OFF        44*RUN_FREQ
+#define TIM_BREAK5_ON         50*RUN_FREQ
+#define TIM_BREAK5_OFF        51*RUN_FREQ
+#define TIM_REV_START         51*RUN_FREQ
+#define TIM_REV_STOP          66*RUN_FREQ
+#define TIM_REPEAT            90*RUN_FREQ       // Rewind at 90 seconds (max. value is 655535 = 327 seconds = a little over 5 minutes)
 
 // This runs only once when powering on
 void setup()
 {
-        digitalWrite(RATTLELED, LOW);     // Blinking led group starts OFF
-        digitalWrite(RADARMOTOR,LOW);     // Radar motor stopped.
-
-        pinMode (RATTLELED,   OUTPUT);
-        pinMode (RADARMOTOR,  OUTPUT);
-
-        analogWrite (RADARMOTOR, SPD_RADAR);   // Run the motor at 50 to slow down the radar.
+        digitalWrite(HAZARDLIGHTS, LOW);     // Hazard lights led group starts OFF
+        digitalWrite(REVLIGHTS,    LOW);     // Reverse lights led group starts OFF
+        digitalWrite(BREAKLIGHTS,  LOW);     // Brake light led group starts OFF
+        digitalWrite(CONSTLIGHTS,  LOW);     // Contant-on led group starts ON
+        
+        // All led groups as OUTPUT
+        pinMode (HAZARDLIGHTS,   OUTPUT);
+        pinMode (REVLIGHTS,   OUTPUT);
+        pinMode (BREAKLIGHTS,   OUTPUT);
+        pinMode (CONSTLIGHTS,   OUTPUT);
 }
 
 // This loops forever.
 void loop()
 {
-        while ( (millis() % 10) != 0L ) //Just do nothing until millis()/5 has no remainder --> Run at 100Hz
+        while ( (millis() % 10) != 0L ) //Just do nothing until millis()/10 has no remainder --> Run at 100Hz
         {
                 asm("nop \n"); // Just do NOP to make sure the compiler doesn't optimize the while() away
         }
 
-        // This code executes 200 times a second
+        // This code executes 100 times a second
         TickCounter++;
         if (TickCounter > TIM_REPEAT)       
         {
                 TickCounter = 0;   // Counts up to a single second, then increase the RunTime
         }
         
-        // Time the stuff!
+        // Time the AUDIO
         if (TickCounter == TIM_SAMPLESTART)  mp3.playWithVolume(1,26);  // Play the first mp3 on the card at volume 26 (max is 30)
         if (TickCounter == TIM_SAMPLESTART+TIM_SAMPLELENGTH) mp3.stopPlay(); // Stop playing after the show is over
 
-        if (TickCounter >= TIM_BURST1 && TickCounter <= TIM_BURST1 + TIM_BURSTLEN1)
+        // Time the break lights
+        if ( (TickCounter == TIM_BREAK1_ON) ||
+             (TickCounter == TIM_BREAK2_ON) ||
+             (TickCounter == TIM_BREAK3_ON) ||
+             (TickCounter == TIM_BREAK4_ON) ||
+             (TickCounter == TIM_BREAK5_ON)    )
         {
-                if (TickCounter & 0x0004) digitalWrite(RATTLELED, HIGH);
-                else digitalWrite(RATTLELED, LOW);
+                digitalWrite(BREAKLIGHTS, HIGH);
         }
-        else if (TickCounter >= TIM_BURST2 && TickCounter <= TIM_BURST2 + TIM_BURSTLEN2)
+        if ( (TickCounter == TIM_BREAK1_OFF) ||
+             (TickCounter == TIM_BREAK2_OFF) ||
+             (TickCounter == TIM_BREAK3_OFF) ||
+             (TickCounter == TIM_BREAK4_OFF) ||
+             (TickCounter == TIM_BREAK5_OFF)    )
         {
-                if (TickCounter & 0x0004) digitalWrite(RATTLELED, HIGH);
-                else digitalWrite(RATTLELED, LOW);
-        }
-        else if (TickCounter >= TIM_BURST3 && TickCounter <= TIM_BURST3 + TIM_BURSTLEN3)
-        {
-                if (TickCounter & 0x0004) digitalWrite(RATTLELED, HIGH);
-                else digitalWrite(RATTLELED, LOW);
-        }
-        else
-        {
-                digitalWrite(RATTLELED, LOW);           // If no burst is going, 
+                digitalWrite(BREAKLIGHTS, LOW);
         }
         
+        // Time the reverse lights
+        if ( TickCounter == TIM_REV_START )
+        {
+             digitalWrite(REVLIGHTS, HIGH);   
+        }
+        if ( TickCounter == TIM_REV_STOP )
+        {
+             digitalWrite(REVLIGHTS, LOW);   
+        }
+
+        // Time the constant lights
+        if ( TickCounter == TIM_CONST_START )
+        {
+             digitalWrite(CONSTLIGHTS, HIGH);   
+        }
+        if ( TickCounter == TIM_CONST_STOP )
+        {
+             digitalWrite(CONSTLIGHTS, LOW);   
+        }
+        
+        // Time the hazard lights
+        if (TickCounter % 50 == 0)             // Every half second we invert the hazard lights
+        {
+              digitalWrite(HAZARDLIGHTS, !digitalRead(HAZARDLIGHTS));
+        }
+
         delay(1); // Added this dummy delay() to make sure the code takes more than 1 ms to execute.
 }
